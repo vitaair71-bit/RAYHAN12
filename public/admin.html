@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin - Daftar Transaksi</title>
+  <style>
+    /* ======== Gaya Umum ======== */
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Poppins", sans-serif;
+      background: linear-gradient(135deg, #e3f2fd, #f1f8e9);
+      margin: 0;
+      padding: 20px;
+    }
+
+    h2 {
+      text-align: center;
+      color: #2c3e50;
+      margin-bottom: 30px;
+    }
+
+    /* ======== Container ======== */
+    #list {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    /* ======== Kartu Transaksi ======== */
+    .transaksi {
+      background: #fff;
+      padding: 20px;
+      margin-bottom: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .transaksi:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .transaksi strong {
+      color: #34495e;
+    }
+
+    .transaksi p {
+      margin: 6px 0;
+    }
+
+    /* ======== Gambar ======== */
+    .transaksi img {
+      max-width: 200px;
+      border-radius: 10px;
+      margin-top: 10px;
+      border: 2px solid #ddd;
+      transition: transform 0.3s ease;
+    }
+
+    .transaksi img:hover {
+      transform: scale(1.05);
+    }
+
+    /* ======== Tombol ======== */
+    .actions {
+      margin-top: 15px;
+    }
+
+    button {
+      background: #e74c3c;
+      color: white;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: background 0.3s ease;
+    }
+
+    button:hover {
+      background: #c0392b;
+    }
+
+    /* ======== Responsif ======== */
+    @media (max-width: 600px) {
+      .transaksi {
+        padding: 15px;
+      }
+
+      .transaksi img {
+        max-width: 100%;
+      }
+
+      button {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h2>📦 Daftar Transaksi</h2>
+  <div id="list">Memuat data...</div>
+
+<script>
+async function loadData() {
+  const list = document.getElementById("list");
+  try {
+    const res = await fetch("/transaksi?" + Date.now()); // tambahkan timestamp biar gak ke-cache
+    const data = await res.json();
+
+    if (data.length === 0) {
+      list.innerHTML = "<p style='text-align:center;color:#777'>Belum ada transaksi.</p>";
+      return;
+    }
+
+    list.innerHTML = data.map((t) => `
+      <div class="transaksi" data-id="${t.id}">
+        <p><strong>Nama:</strong> ${t.nama}</p>
+        <p><strong>Telepon:</strong> ${t.telepon}</p>
+        <p><strong>Alamat:</strong> ${t.alamat}</p>
+        <p><strong>Metode:</strong> ${t.metode}</p>
+        <p><strong>Total:</strong> Rp${Number(t.total).toLocaleString("id-ID")}</p>
+        <p><strong>Waktu:</strong> ${t.tanggal}</p>
+        <p><strong>Bukti Transfer:</strong></p>
+        <img src="${t.bukti}" alt="Bukti Transfer">
+        <div class="actions">
+          <button onclick="hapusTransaksi('${t.id}')">Hapus</button>
+        </div>
+      </div>
+    `).join("");
+  } catch (err) {
+    list.innerHTML = "<p style='color:red;text-align:center'>Gagal memuat data transaksi.</p>";
+  }
+}
+
+async function hapusTransaksi(id) {
+  if (!confirm("Yakin ingin menghapus transaksi ini?")) return;
+
+  try {
+    const res = await fetch("/transaksi/" + id, { method: "DELETE" });
+    const data = await res.json();
+
+    if (res.ok) {
+      alert("Transaksi berhasil dihapus.");
+      const item = document.querySelector(`[data-id='${id}']`);
+      if (item) item.remove(); // langsung hapus dari tampilan
+    } else {
+      alert(data.error || "Gagal menghapus transaksi.");
+    }
+  } catch (err) {
+    alert("Terjadi kesalahan saat menghapus transaksi.");
+  }
+}
+
+loadData();
+</script>
+</body>
+</html>

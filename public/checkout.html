@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Checkout</title>
+  <style>
+    body {
+      font-family: "Segoe UI", sans-serif;
+      background: #f5f6fa;
+      margin: 0;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: auto;
+    }
+
+    .checkout-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: white;
+      padding: 12px;
+      margin-bottom: 10px;
+      border-radius: 12px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    .checkout-item img {
+      width: 60px;
+      height: 60px;
+      border-radius: 8px;
+      object-fit: cover;
+    }
+
+    form {
+      background: white;
+      padding: 15px;
+      border-radius: 12px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      margin-top: 20px;
+    }
+
+    label {
+      display: block;
+      margin-top: 10px;
+      font-weight: 600;
+    }
+
+    input, textarea, select {
+      width: 100%;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      margin-top: 5px;
+    }
+
+    #manual-payment {
+      display: none;
+      background: #fff;
+      border-radius: 10px;
+      padding: 15px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      margin-top: 15px;
+    }
+
+    #manual-payment p {
+      margin: 8px 0;
+      font-size: 15px;
+    }
+
+    #bukti-container {
+      display: none;
+      margin-top: 15px;
+      text-align: center;
+    }
+
+    #preview-bukti {
+      margin-top: 10px;
+      width: 100%;
+      max-width: 300px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      display: none;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      background: #2ecc71;
+      border: none;
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+
+    button:hover {
+      background: #27ae60;
+    }
+
+    .total {
+      font-weight: bold;
+      font-size: 18px;
+      text-align: right;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h2>Checkout</h2>
+
+  <div id="checkout-list"></div>
+  <div class="total">Total: <span id="total-price">Rp0</span></div>
+
+  <form id="checkout-form">
+    <label for="nama">Nama Lengkap</label>
+    <input type="text" id="nama" name="nama" placeholder="Masukkan nama Anda" required>
+
+    <label for="telepon">Nomor HP</label>
+    <input type="tel" id="telepon" name="telepon" placeholder="Contoh: 081234567890" required pattern="[0-9]{10,15}">
+
+    <label for="alamat">Alamat Lengkap</label>
+    <textarea id="alamat" name="alamat" rows="3" placeholder="Masukkan alamat pengiriman" required></textarea>
+
+    <label for="payment-method">Pilih Metode Pembayaran:</label>
+    <select id="payment-method" required>
+      <option value="">-- Pilih Metode --</option>
+      <option value="Shopeepay">Shopeepay</option>
+      <option value="Gopay">GoPay</option>
+      <option value="Ovo">Ovo</option>
+      <option value="Seabank">Seabank</option>
+        <option value="Neobank">Neobank</option>
+    </select>
+
+    <div id="manual-payment"></div>
+
+    <!-- Upload bukti transfer -->
+    <div id="bukti-container">
+      <label for="bukti-transfer">Upload Bukti Transfer:</label>
+      <input type="file" id="bukti-transfer" accept="image/*">
+      <img id="preview-bukti" alt="Preview bukti transfer">
+    </div>
+
+    <button type="submit" id="complete-payment">Selesai Bayar</button>
+  </form>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const checkoutList = document.getElementById("checkout-list");
+  const totalPriceEl = document.getElementById("total-price");
+  const paymentSelect = document.getElementById("payment-method");
+  const manualPayment = document.getElementById("manual-payment");
+  const buktiContainer = document.getElementById("bukti-container");
+  const buktiInput = document.getElementById("bukti-transfer");
+  const previewBukti = document.getElementById("preview-bukti");
+
+  const formatRupiah = n => "Rp" + n.toLocaleString("id-ID");
+  const cart = JSON.parse(localStorage.getItem("checkout")) || [];
+
+  if (cart.length === 0) {
+    checkoutList.innerHTML = `<p style="text-align:center;color:#999;">Keranjang kamu kosong.</p>`;
+    document.getElementById("complete-payment").disabled = true;
+    return;
+  }
+
+  // ==== TAMPILKAN DAFTAR PRODUK ====
+  let total = 0;
+  checkoutList.innerHTML = cart.map(item => {
+    const price = Number(item.price) || 0;
+    const qty = Number(item.qty) || 1;
+    total += price * qty;
+    return `
+      <div class="checkout-item">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <img src="${item.image}" alt="${item.name}">
+          <div>
+            <strong>${item.name}</strong><br>
+            <small>Ukuran: ${item.size}</small><br>
+            <span style="color:green;">${formatRupiah(price * qty)}</span>
+          </div>
+        </div>
+        <span>x${qty}</span>
+      </div>
+    `;
+  }).join("");
+
+  totalPriceEl.textContent = formatRupiah(total);
+
+  // ==== INFORMASI PEMBAYARAN ====
+  const paymentInfo = {
+    Shopeepay: { nama: "Shopeepay", info: "Nomor: 082197770219 (a.n. DZULFIKAR RAYHAN BOWENG )" },
+    Gopay: { nama: "GoPay", info: "Nomor: 082197770219 (a.n. DZULFIKAR RAYHAN BOWENG)" },
+    Ovo: { nama: "Ovo", info: "Nomor: 082197770219 (a.n. DZULFIKAR RAYHAN BOWENG)" },
+    Seabank: { nama: "Seabank", info: "Rek: 9019-0569-4689 (a.n. DZULFIKAR RAYHAN BOWENG)" },
+    Neobank: { nama: "Neobank", info: "Rek: 5859-4572-0870-8191 (a.n. DZULFIKAR RAYHAN BOWENG)" },
+  };
+
+  paymentSelect.addEventListener("change", () => {
+    const method = paymentSelect.value;
+    if (!method) {
+      manualPayment.style.display = "none";
+      buktiContainer.style.display = "none";
+      return;
+    }
+
+    const data = paymentInfo[method];
+    manualPayment.style.display = "block";
+    manualPayment.innerHTML = `
+      <h3>Instruksi Pembayaran (${data.nama})</h3>
+      <p>${data.info}</p>
+      <p><strong>Total yang harus dibayar:</strong> ${formatRupiah(total)}</p>
+      <p>Setelah transfer, upload bukti pembayaran di bawah ini:</p>
+    `;
+    buktiContainer.style.display = "block";
+  });
+
+  // ==== PREVIEW GAMBAR ====
+  buktiInput.addEventListener("change", (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        previewBukti.src = reader.result;
+        previewBukti.style.display = "block";
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+
+  // ==== KETIKA SUBMIT ====
+  document.getElementById("checkout-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const nama = document.getElementById("nama").value;
+    const telepon = document.getElementById("telepon").value;
+    const alamat = document.getElementById("alamat").value;
+    const metode = paymentSelect.value;
+    const bukti = buktiInput.files[0];
+
+    if (!bukti) {
+      alert("⚠️ Harap upload bukti transfer terlebih dahulu.");
+      return;
+    }
+
+    // 🔥 Buat FormData untuk dikirim ke server
+    const formData = new FormData();
+    formData.append("bukti", bukti);
+    formData.append("nama", nama);
+    formData.append("telepon", telepon);
+    formData.append("alamat", alamat);
+    formData.append("metode", metode);
+    formData.append("total", total);
+
+    try {
+      const res = await fetch("/transaksi", {
+        method: "POST",
+        body: formData
+      });
+
+      const result = await res.json();
+
+      if (res.ok) {
+        alert(`✅ Terima kasih, ${nama}!\nTransaksi kamu telah berhasil disimpan.`);
+        localStorage.removeItem("checkout");
+        window.location.href = "index.html";
+      } else {
+        alert("❌ Gagal menyimpan transaksi: " + (result.error || "Kesalahan server"));
+      }
+    } catch (err) {
+      console.error(err);
+      alert("⚠️ Terjadi kesalahan saat mengirim data ke server.");
+    }
+  });
+});
+</script>
+
+</body>
+</html>
