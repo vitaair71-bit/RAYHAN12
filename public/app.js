@@ -8,41 +8,23 @@ const products = [
     name: "Hitam",
     displayName: "BAJU HITAM",
     price: 50000,
-    image: "images/hitam.jpeg",
-    rating: 5
+    image: "images/hitam.jpeg"
   },
   {
     id: "putih",
     name: "Putih",
     displayName: "BAJU PUTIH",
     price: 50000,
-    image: "images/putih.jpeg",
-    rating: 3
+    image: "images/putih.jpeg"
   },
   {
     id: "merah",
     name: "Merah",
     displayName: "BAJU MERAH",
     price: 50000,
-    image: "images/merah.jpeg",
-    rating: 3
+    image: "images/merah.jpeg"
   }
 ];
-
-// === BINTANG RATING ===
-function createStarRating(rating) {
-  const ratingDiv = document.createElement('div');
-  ratingDiv.className = 'product-rating flex gap-1 text-yellow-400';
-  ratingDiv.title = `Rating ${rating}/5`;
-
-  for (let i = 0; i < 5; i++) {
-    const star = document.createElement('i');
-    star.className = i < rating ? 'ri-star-fill' : 'ri-star-line';
-    ratingDiv.appendChild(star);
-  }
-
-  return ratingDiv;
-}
 
 // === TOMBOL UKURAN ===
 function createSizeButtons(ariaLabel) {
@@ -89,7 +71,6 @@ function renderProducts(productList, containerId) {
     price.className = 'product-price';
     price.textContent = `Rp${product.price.toLocaleString('id-ID')}`;
 
-    const ratingStars = createStarRating(product.rating);
     const sizeButtons = createSizeButtons(`Pilih ukuran kaos ${product.name.toLowerCase()}`);
 
     const addToCartBtn = document.createElement('button');
@@ -100,7 +81,6 @@ function renderProducts(productList, containerId) {
 
     card.appendChild(img);
     card.appendChild(name);
-    card.appendChild(ratingStars);
     card.appendChild(price);
     card.appendChild(sizeButtons);
     card.appendChild(addToCartBtn);
@@ -123,7 +103,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const loginBtn = qs("loginBtn");
   const modal = qs("loginModal");
   const closeBtn = document.querySelector(".close");
-  const closeCartBtn = qs("close-cart"); // ✅ tombol X keranjang
+  const closeCartBtn = qs("close-cart"); // tombol X keranjang
 
   // === TOGGLE SIDEBAR ===
   function closeAll() {
